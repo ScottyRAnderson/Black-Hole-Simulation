@@ -10,17 +10,17 @@ public class ImageEffect : ScriptableObject
     [SerializeField]
     protected Shader effectShader;
 
-    protected Material material;
+    protected List<Material> materials;
 
     public virtual bool RenderEffect { get { return renderEffect; } }
     public virtual Shader EffectShader { get { return effectShader; } }
 
     public virtual void Render(RenderTexture source, RenderTexture destination) { }
-    protected virtual Material BuildMaterial()
+    protected virtual List<Material> BuildMaterials()
     {
-        if(material == null || material.shader != effectShader){
-            material = new Material(effectShader);
+        if(materials == null){
+            materials = new List<Material>();
         }
-        return material;
+        return materials;
     }
 }

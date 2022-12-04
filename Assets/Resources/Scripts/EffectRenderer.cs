@@ -9,7 +9,7 @@ public class EffectRenderer : MonoBehaviour
     [SerializeField]
     private ImageEffect[] effects;
 
-    private Material defaultMat;
+    private static Material defaultMat;
 
     //[ImageEffectOpaque]
     private void OnRenderImage(RenderTexture intialSource, RenderTexture finalDestination)
@@ -52,6 +52,42 @@ public class EffectRenderer : MonoBehaviour
         // If a given material is null, blit the default mat
         if(currentDestination != finalDestination){
             Graphics.Blit(currentSource, finalDestination, defaultMat);
+        }
+
+        // Release temporary textures
+        for (int i = 0; i < temporaryTextures.Count; i++){
+            RenderTexture.ReleaseTemporary(temporaryTextures[i]);
+        }
+    }
+
+    public static void RenderMaterials(RenderTexture source, RenderTexture destination, List<Material> materials)
+    {
+        List<RenderTexture> temporaryTextures = new List<RenderTexture>();
+        RenderTexture currentSource = source;
+        RenderTexture currentDestination = null;
+
+        for (int i = 0; i < materials.Count; i++)
+        {
+            Material material = materials[i];
+            if (i == materials.Count - 1)
+            {
+                // If final effect, render into final destination
+                currentDestination = destination;
+            }
+            else
+            {
+                // ...Otherwise, create a temporary texture
+                currentDestination = TemporaryRenderTexture(destination);
+                temporaryTextures.Add(currentDestination); // Record temporary texture to be released later
+            }
+
+            Graphics.Blit(currentSource, destination, material);
+            currentSource = currentDestination;
+        }
+
+        // If a given material is null, blit the default mat
+        if (currentDestination != destination){
+            Graphics.Blit(currentSource, destination, defaultMat);
         }
 
         // Release temporary textures

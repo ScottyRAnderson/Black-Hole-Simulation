@@ -8,28 +8,44 @@ public class BlackHoleEffect : ImageEffect
     [SerializeField]
     private BlackHoleSettings settings;
 
+    private List<Singularity> instances;
+
     public override void Render(RenderTexture source, RenderTexture destination)
     {
         if(settings == null){
             settings = (BlackHoleSettings)CreateInstance("BlackHoleSettings");
         }
+        if (instances == null || instances.Count == 0 || Application.isEditor){
+            instances = new List<Singularity>(FindObjectsOfType<Singularity>());
+        }
 
-        Material mat = BuildMaterial();
-        EffectRenderer.RenderMaterial(source, destination, mat);
+        List<Material> materials = BuildMaterials();
+        EffectRenderer.RenderMaterials(source, destination, materials);
     }
 
-    protected override Material BuildMaterial()
+    protected override List<Material> BuildMaterials()
     {
-        base.BuildMaterial();
+        base.BuildMaterials();
+        materials.Clear();
 
-        // Update material to match settings
-        if(settings.InvertColors){
-            material.EnableKeyword("INVERTCOL");
-        }
-        else{
-            material.DisableKeyword("INVERTCOL");
+        for (int i = 0; i < instances.Count; i++)
+        {
+            Singularity instance = instances[i];
+            Material material = new Material(effectShader);
+
+            // Update material to match settings
+            material.SetVector("_Position", instance.transform.position);
+            material.SetFloat("_Mass", instance.Mass);
+            material.SetFloat("_GravConstant", instance.GravitationalConstant);
+
+            Vector2 screenPos = Camera.current.WorldToScreenPoint(instance.transform.position);
+            screenPos.x /= Camera.current.pixelWidth;
+            screenPos.y /= Camera.current.pixelHeight;
+            material.SetVector("_ScreenPos", screenPos);
+
+            materials.Add(material);
         }
 
-        return material;
+        return materials;
     }
 }

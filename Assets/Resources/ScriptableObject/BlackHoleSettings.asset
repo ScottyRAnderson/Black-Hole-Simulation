@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8bc7ac92d0d6124b9efd3b8794cca1e, type: 3}
   m_Name: BlackHoleSettings
   m_EditorClassIdentifier: 
-  invertColors: 0
+  schwarzschildRadius: 10
