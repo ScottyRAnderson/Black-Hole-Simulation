@@ -168,7 +168,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mass: 3.5e+27
-  gravitationalConstant: 1
 --- !u!1 &1776034448
 GameObject:
   m_ObjectHideFlags: 0

@@ -47,23 +47,14 @@ Shader "Hidden/BlackHole"
                 return o;
             }
 
-            static const float PI = 3.14159265359;
-            static const float TWO_PI = 6.2831852;
-            static const float TAU = PI * 2;
             static const float maxFloat = 3.402823466e+38;
-
             static const float speedOfLight = 299792458;
             static const float gravitationalConst = 0.000000000066743;
 
             sampler2D _MainTex;
             float3 _Position;
-            float _GravConstant;
             float _Mass;
             float2 _ScreenPos;
-
-            float remap01(float a, float b, float t){
-                return (t - a) / (b - a);
-            }
 
             float2 raySphere(float3 sphereCentre, float sphereRadius, float3 rayOrigin, float3 rayDir)
             {
@@ -90,19 +81,6 @@ Shader "Hidden/BlackHole"
                 return float2(maxFloat, 0);
             }
 
-            void CartesianToSpherical(in float3 p, out float rho, out float phi, out float theta)
-            {
-                rho = sqrt((p.x * p.x) + (p.y * p.y) + (p.z * p.z));
-                phi = asin(p.y / rho);
-                theta = atan2(p.z, p.x);
-            }
-
-            float4 rayMarchScene(float3 rayOrigin, float3 rayDir)
-            {
-                float4 color;
-                return color;
-            }
-
             fixed4 frag(v2f i) : SV_Target
             {
                 float4 origionalCol = tex2D(_MainTex, i.uv);
@@ -111,24 +89,25 @@ Shader "Hidden/BlackHole"
 
                 float2 screenPos = ComputeScreenPos(float4(_Position, 1)).xy;
 
-                float2 uv = i.uv - _ScreenPos;
+                float2 uv = i.uv -_ScreenPos;
 
-                float distToCam = distance(_Position, _WorldSpaceCameraPos); // Ds
-                float uvDist = length(float2(uv.x * 2, uv.y)); // Dls (Distance from the center of the screen)
+                float distToCam = distance(_Position, _WorldSpaceCameraPos); // Dl
+                float uvDist = length(float2(uv.x * 2, uv.y)); // Distance from the center of the screen
 
                 float speedOfLightSqrd = pow(speedOfLight, 2);
                 float schwarzschildRadius = (2 * gravitationalConst * _Mass) / speedOfLightSqrd; // Equation Source: https://en.wikipedia.org/wiki/Schwarzschild_radius
 
                 // If we are within the Schwarzschild Radius, render the event horizon
                 float2 hitInfo = raySphere(_Position, pow(schwarzschildRadius, 2), rayOrigin, rayDir);
-                if (hitInfo.y > 0)
-                {
+                if (hitInfo.y > 0){
                     return origionalCol + 1 - hitInfo.x;
                 }
 
                 // ...otherwise, bend the scene around the singularity
                 // To do so we must warp the screen space UV's according the effects of Gravitational Lensing
 
+                // We cannot directly compute the lensing equation due to the 2D nature of the screen
+                // Therefore we must assume that Dl << Ds and Dl << Dls, thus the deflection angle is inversely proportional to the root of distances
                 float einsteinRing = 1 / pow(uvDist * sqrt(distToCam), 2) * schwarzschildRadius * 2;
                 uv *= 1 - einsteinRing;
                 uv += _ScreenPos;

@@ -36,7 +36,6 @@ public class BlackHoleEffect : ImageEffect
             // Update material to match settings
             material.SetVector("_Position", instance.transform.position);
             material.SetFloat("_Mass", instance.Mass);
-            material.SetFloat("_GravConstant", instance.GravitationalConstant);
 
             Vector2 screenPos = Camera.current.WorldToScreenPoint(instance.transform.position);
             screenPos.x /= Camera.current.pixelWidth;
