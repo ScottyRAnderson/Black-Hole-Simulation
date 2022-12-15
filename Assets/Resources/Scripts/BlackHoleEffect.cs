@@ -34,13 +34,13 @@ public class BlackHoleEffect : ImageEffect
             Material material = new Material(effectShader);
 
             // Update material to match settings
+            material.SetFloat("_StepSize", settings.StepSize);
+            material.SetInt("_NumSteps", settings.NumSteps);
+            material.SetFloat("_MaxDistortRadius", settings.MaxDistortRadius);
+            material.SetFloat("_DistortFadeOutDistance", settings.DistortFadeOutDistance);
+
             material.SetVector("_Position", instance.transform.position);
             material.SetFloat("_Mass", instance.Mass);
-
-            Vector2 screenPos = Camera.current.WorldToScreenPoint(instance.transform.position);
-            screenPos.x /= Camera.current.pixelWidth;
-            screenPos.y /= Camera.current.pixelHeight;
-            material.SetVector("_ScreenPos", screenPos);
 
             materials.Add(material);
         }
