@@ -55,13 +55,46 @@ Shader "Hidden/ShapeFunction"
             float _StepSize;
             int _NumSteps;
 
+            float GetDist(float3 p)
+            {
+                float planeDist = p.y;
+                float sphereDist = length(p - _Position) - 1;
+
+                return sphereDist;
+            }
+
+            float RaymarchScene(float3 rayOrigin, float3 rayDir, int numSteps, float stepSize)
+            {
+                float3 rayPos = rayOrigin;
+                float result = 0;
+
+                for (float i = 0; i < numSteps; i++)
+                {
+                    // Move the ray
+                    rayPos += rayDir * stepSize;
+
+                    // Evaluate sdf
+                    float dist = GetDist(rayPos);
+                    result += dist;
+
+                    if (dist < 0)
+                    {
+                        break;
+                    }
+                }
+
+                return result;
+            }
+
             fixed4 frag(v2f i) : SV_Target
             {
                 float4 originalCol = tex2D(_MainTex, i.uv);
                 float3 rayOrigin = _WorldSpaceCameraPos;
                 float3 rayDir = normalize(i.viewVector);
 
-                return originalCol;
+                float result = RaymarchScene(rayOrigin, rayDir, _NumSteps, _StepSize);
+
+                return result;
             }
             ENDCG
         }

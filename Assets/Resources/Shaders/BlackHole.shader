@@ -117,22 +117,26 @@ Shader "Hidden/BlackHole"
                     rayOrigin += rayDir * dstToBounds;
                     float4 rayPos = RaymarchScene(rayOrigin, rayDir, _NumSteps, _StepSize, mass);
 
-                    // If we are within the Schwarzschild Radius, render the event horizon
-                    if (dstThroughEH > 0 || rayPos.w == 1) {
-                        return _EventHorizonColor;
-                    }
-
-                    // ...otherwise, bend the scene around the singularity
-                    // To do so we must warp the screen space UV's according the effects of Gravitational Lensing
-
+                    // Warp the screen space UV's according the effects of Gravitational Lensing
                     float3 distortedRayDir = normalize(rayPos - rayOrigin);
                     float4 rayCameraSpace = mul(unity_WorldToCamera, float4(distortedRayDir, 0));
                     float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
 
                     float2 distortedScreenUV = float2(rayUVProjection.x + 0.5, rayUVProjection.y / 1.5 + 0.5);
                     uv = distortedScreenUV;
+                    float4 finalCol = tex2D(_MainTex, uv);
 
-                    return tex2D(_MainTex, uv);
+                    // If we are within the Schwarzschild Radius, render the event horizon
+                    if (dstThroughEH > 0 || rayPos.w == 1)
+                    {
+                        if (dstThroughEH < 1){
+                            return finalCol;
+                        }
+                        return _EventHorizonColor;
+                    }
+
+                    // ...otherwise, bend the scene around the singularity
+                    return finalCol;
                 }
                 return originalCol;
             }

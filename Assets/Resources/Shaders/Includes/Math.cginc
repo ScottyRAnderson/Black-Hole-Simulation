@@ -29,3 +29,15 @@ float2 raySphere(float3 sphereCentre, float sphereRadius, float3 rayOrigin, floa
 	// Ray did not intersect sphere
 	return float2(maxFloat, 0);
 }
+
+float intersectSDF(float distA, float distB) {
+	return max(distA, distB);
+}
+
+float unionSDF(float distA, float distB) {
+	return min(distA, distB);
+}
+
+float differenceSDF(float distA, float distB) {
+	return max(distA, -distB);
+}

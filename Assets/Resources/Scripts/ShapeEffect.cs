@@ -5,16 +5,10 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "PostProcessing/ShapeEffect", fileName = "ShapeEffect")]
 public class ShapeEffect : ImageEffect
 {
-    [SerializeField]
-    private ShapeSettings settings;
-
     private List<ShapeEntity> instances;
 
     public override void Render(RenderTexture source, RenderTexture destination)
     {
-        if (settings == null){
-            settings = (ShapeSettings)CreateInstance("ShapeSettings");
-        }
         if (instances == null || instances.Count == 0 || Application.isEditor){
             instances = new List<ShapeEntity>(FindObjectsOfType<ShapeEntity>());
         }
@@ -34,6 +28,9 @@ public class ShapeEffect : ImageEffect
             Material material = new Material(effectShader);
 
             // Update material to match settings
+            material.SetFloat("_StepSize", instance.StepSize);
+            material.SetInt("_NumSteps", instance.NumSteps);
+            material.SetVector("_Position", instance.transform.position);
 
             materials.Add(material);
         }
