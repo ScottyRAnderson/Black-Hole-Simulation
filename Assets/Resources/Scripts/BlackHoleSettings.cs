@@ -6,6 +6,8 @@ using UnityEngine;
 public class BlackHoleSettings : ScriptableObject
 {
     [SerializeField]
+    private Color eventHorizonColor = Color.black;
+    [SerializeField]
     private float stepSize = 0.1f;
     [SerializeField]
     private int numSteps = 10;
@@ -14,6 +16,7 @@ public class BlackHoleSettings : ScriptableObject
     [SerializeField]
     private float distortFadeOutDistance = 50f;
 
+    public Color EventHorizonColor { get { return eventHorizonColor; } }
     public float StepSize { get { return stepSize; } }
     public int NumSteps { get { return numSteps; } }
     public float MaxDistortRadius { get { return maxDistortRadius; } }

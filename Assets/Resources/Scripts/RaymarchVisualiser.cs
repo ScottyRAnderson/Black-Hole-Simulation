@@ -31,6 +31,8 @@ public class RaymarchVisualiser : MonoBehaviour
     [SerializeField]
     private int numSteps;
     [SerializeField]
+    private bool blockAbsorbedRays;
+    [SerializeField]
     private bool debugDirections;
     [SerializeField]
     private float directionDist;
@@ -105,6 +107,10 @@ public class RaymarchVisualiser : MonoBehaviour
             rayDir += acceleration * stepSize;
             rayPos += rayDir;
 
+            if(blockAbsorbedRays && Vector3.Distance(rayPos, singularity.transform.position) < singularity.SchwarzschildRadius){
+                break;
+            }
+
             positions.Add(rayPos);
         }
         return positions;
@@ -125,10 +131,6 @@ public class RaymarchVisualiser : MonoBehaviour
                 Vector3 rayDir = Camera.main.projectionMatrix.inverse * new Vector3(uv.x, uv.y, 0f);
                 rayDir = Camera.main.cameraToWorldMatrix * rayDir;
                 rayDir.Normalize();
-
-                // POTENTIALLY THE FIX?:
-                //rayPos = rayOrigin.position + rayDir * 200f;
-                //rayDir = rayOrigin.forward;
 
                 List<Vector3> singlePositions = SimulateSingle(rayPos, rayDir, stepSize, numSteps);
                 singlePositions.Insert(0, rayDir);

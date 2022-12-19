@@ -34,13 +34,14 @@ public class BlackHoleEffect : ImageEffect
             Material material = new Material(effectShader);
 
             // Update material to match settings
+            material.SetColor("_EventHorizonColor", settings.EventHorizonColor);
             material.SetFloat("_StepSize", settings.StepSize);
             material.SetInt("_NumSteps", settings.NumSteps);
             material.SetFloat("_MaxDistortRadius", settings.MaxDistortRadius);
             material.SetFloat("_DistortFadeOutDistance", settings.DistortFadeOutDistance);
 
             material.SetVector("_Position", instance.transform.position);
-            material.SetFloat("_Mass", instance.Mass);
+            material.SetFloat("_SchwarzschildRadius", instance.SchwarzschildRadius);
 
             materials.Add(material);
         }

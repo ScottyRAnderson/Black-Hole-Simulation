@@ -9,11 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8bc7ac92d0d6124b9efd3b8794cca1e, type: 3}
-  m_Name: BlackHoleSettings
+  m_Script: {fileID: 11500000, guid: 11ba99ed25af35a44b831a1690925632, type: 3}
+  m_Name: ShapeSettings
   m_EditorClassIdentifier: 
-  eventHorizonColor: {r: 0, g: 0, b: 0, a: 1}
-  stepSize: 0.00023
-  numSteps: 500
-  maxDistortRadius: 250
-  distortFadeOutDistance: 0.0002

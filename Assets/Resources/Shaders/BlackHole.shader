@@ -2,9 +2,9 @@ Shader "Hidden/BlackHole"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        _MainTex("Texture", 2D) = "white" {}
     }
-    SubShader
+        SubShader
     {
         // No culling or depth
         Cull Off
@@ -34,7 +34,7 @@ Shader "Hidden/BlackHole"
                 float3 viewVector : TEXCOORD2;
             };
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
@@ -49,19 +49,19 @@ Shader "Hidden/BlackHole"
             }
 
             sampler2D _MainTex;
-            
-            float3 _Position;
-            float _Mass;
 
+            float3 _Position;
+            float _SchwarzschildRadius;
+
+            float4 _EventHorizonColor;
             float _StepSize;
             int _NumSteps;
             float _MaxDistortRadius;
             float _DistortFadeOutDistance;
 
-            float4 RaymarchScene(float3 rayOrigin, float3 rayDir, float stepSize, int numSteps, float schwarzschildRadius)
+            float4 RaymarchScene(float3 rayOrigin, float3 rayDir, int numSteps, float stepSize, float mass)
             {
                 float3 rayPos = rayOrigin;
-                int radiusCheck = 0;
 
                 for (float i = 0; i < numSteps; i++)
                 {
@@ -70,22 +70,22 @@ Shader "Hidden/BlackHole"
                     float sqrLength = pow(length(difference), 2);
 
                     float3 direction = normalize(difference);
-                    float3 acceleration = direction * gravitationalConst * ((_Mass * 1e-13) / sqrLength);
+                    float3 acceleration = direction * gravitationalConst * ((mass * 1e-13) / sqrLength);
 
                     // Move the ray according to this force
                     rayDir += acceleration * stepSize;
                     rayPos += rayDir;
 
-                    if (distance(rayPos, _Position) <= _MaxDistortRadius){
-                        //radiusCheck = 1;
+                    if (distance(rayPos, _Position) < _SchwarzschildRadius) {
+                        //return float4(rayPos, 1);
                     }
 
-                    if (distance(rayPos, _Position) < schwarzschildRadius) {
-                        //break;
+                    if (distance(rayPos, _Position) > _MaxDistortRadius) {
+                        return float4(rayPos, 0);
                     }
                 }
 
-                return float4(rayPos, radiusCheck);
+                return float4(rayPos, 0);
             }
 
             fixed4 frag(v2f i) : SV_Target
@@ -97,36 +97,44 @@ Shader "Hidden/BlackHole"
                 float2 uv = i.uv;
 
                 float speedOfLightSqrd = pow(speedOfLight, 2);
-                float schwarzschildRadius = (2 * gravitationalConst * _Mass) / speedOfLightSqrd; // Equation Source: https://en.wikipedia.org/wiki/Schwarzschild_radius
-
-                float4 rayPos = RaymarchScene(rayOrigin, rayDir, _StepSize, _NumSteps, schwarzschildRadius);
+                float mass = (_SchwarzschildRadius * speedOfLightSqrd) / (gravitationalConst * 2); // Re-arranged equation of Schwarzschild Radius
 
                 // If we are within the Schwarzschild Radius, render the event horizon
-                float2 hitInfo = raySphere(_Position, schwarzschildRadius, rayOrigin, rayDir);
-                if (hitInfo.y > 0) {
-                    return float4(0, 0, 0, 0); // 1 - hitInfo.y;
+
+                float2 boundsHitInfo = raySphere(_Position, _MaxDistortRadius, rayOrigin, rayDir);
+                float dstToBounds = boundsHitInfo.x;
+                float dstThroughBounds = boundsHitInfo.y;
+
+                // If we are looking through the bounds render the black hole
+                if (dstThroughBounds > 0)
+                {
+                    // Identify the event horizon
+                    float2 hitInfo = raySphere(_Position, _SchwarzschildRadius * 1.6f, rayOrigin, rayDir);
+                    float dstToEH = hitInfo.x;
+                    float dstThroughEH = hitInfo.y;
+
+                    // Move the rayOrigin to the first point within the distortion bounds
+                    rayOrigin += rayDir * dstToBounds;
+                    float4 rayPos = RaymarchScene(rayOrigin, rayDir, _NumSteps, _StepSize, mass);
+
+                    // If we are within the Schwarzschild Radius, render the event horizon
+                    if (dstThroughEH > 0 || rayPos.w == 1) {
+                        return _EventHorizonColor;
+                    }
+
+                    // ...otherwise, bend the scene around the singularity
+                    // To do so we must warp the screen space UV's according the effects of Gravitational Lensing
+
+                    float3 distortedRayDir = normalize(rayPos - rayOrigin);
+                    float4 rayCameraSpace = mul(unity_WorldToCamera, float4(distortedRayDir, 0));
+                    float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
+
+                    float2 distortedScreenUV = float2(rayUVProjection.x + 0.5, rayUVProjection.y / 1.5 + 0.5);
+                    uv = distortedScreenUV;
+
+                    return tex2D(_MainTex, uv);
                 }
-
-                // ...otherwise, bend the scene around the singularity
-                // To do so we must warp the screen space UV's according the effects of Gravitational Lensing
-
-                float3 distortedRayDir = normalize(rayPos - rayOrigin);
-                float4 rayCameraSpace = mul(unity_WorldToCamera, float4(distortedRayDir, 0));
-                float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
-
-                float2 distortedScreenUV = float2(rayUVProjection.x + 0.5, rayUVProjection.y / 1.5 + 0.5);
-                uv = distortedScreenUV;
-
-                //if (rayPos.w == 1){
-                //    uv = distortedScreenUV;
-                //}
-                //else
-                //{
-                //    float dist = distance(rayPos, _Position);
-                //    uv = lerp(uv, distortedScreenUV, dist * _DistortFadeOutDistance);
-                //}
-
-                return tex2D(_MainTex, uv);
+                return originalCol;
             }
             ENDCG
         }
