@@ -36,22 +36,4 @@ public static class MathHelper
     public static float NormalizeValue(float value, float min, float max){
         return (value - min) / (max - min);
     }
-
-    // Ellipse defintion reference (https://en.wikipedia.org/wiki/Ellipse#Parameters)
-    public static Vector3[] SampleEllipse(float semiMajor, float semiMinor, Vector3 center, int resolution = 1000, float theta = 0f)
-    {
-        Vector3[] points = new Vector3[resolution + 1];
-        Quaternion rot = Quaternion.AngleAxis(theta, Vector3.up);
-        for (int i = 0; i <= resolution; i++)
-        {
-            /// 0<=t<=2π
-            /// (i / Resoution) gives us the percent along the ellipse. * 2π gives us the desired sample angle
-            float angle = ((float)i / (float)resolution) * Mathf.PI * 2f;
-
-            float x = semiMajor * Mathf.Cos(angle);
-            float y = semiMinor * Mathf.Sin(angle);
-            points[i] = rot * new Vector3(x, 0f, y) + center;
-        }
-        return points;
-    }
 }

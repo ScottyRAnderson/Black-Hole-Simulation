@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eventHorizonColor: {r: 0, g: 0, b: 0, a: 1}
   stepSize: 0.00023
-  numSteps: 500
   maxDistortRadius: 250
-  distortFadeOutDistance: 0.0002
+  distortFadeOutDistance: 400
+  fadePower: 1
+  debugFade: 0

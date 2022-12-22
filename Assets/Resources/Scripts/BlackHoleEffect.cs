@@ -36,9 +36,16 @@ public class BlackHoleEffect : ImageEffect
             // Update material to match settings
             material.SetColor("_EventHorizonColor", settings.EventHorizonColor);
             material.SetFloat("_StepSize", settings.StepSize);
-            material.SetInt("_NumSteps", settings.NumSteps);
+
             material.SetFloat("_MaxDistortRadius", settings.MaxDistortRadius);
             material.SetFloat("_DistortFadeOutDistance", settings.DistortFadeOutDistance);
+            material.SetFloat("_FadePower", settings.FadePower);
+            if(settings.DebugFade){
+                material.EnableKeyword("DEBUGFADE");
+            }
+            else{
+                material.DisableKeyword("DEBUGFADE");
+            }
 
             material.SetVector("_Position", instance.transform.position);
             material.SetFloat("_SchwarzschildRadius", instance.SchwarzschildRadius);

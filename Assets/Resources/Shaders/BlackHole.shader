@@ -4,7 +4,7 @@ Shader "Hidden/BlackHole"
     {
         _MainTex("Texture", 2D) = "white" {}
     }
-        SubShader
+    SubShader
     {
         // No culling or depth
         Cull Off
@@ -16,6 +16,7 @@ Shader "Hidden/BlackHole"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma shader_feature DEBUGFADE
 
             #include "UnityCG.cginc"
             #include "./Includes/Math.cginc"
@@ -49,15 +50,16 @@ Shader "Hidden/BlackHole"
             }
 
             sampler2D _MainTex;
+            sampler2D _CameraDepthTexture;
 
             float3 _Position;
             float _SchwarzschildRadius;
 
             float4 _EventHorizonColor;
             float _StepSize;
-            int _NumSteps;
             float _MaxDistortRadius;
             float _DistortFadeOutDistance;
+            float _FadePower;
 
             float4 RaymarchScene(float3 rayOrigin, float3 rayDir, int numSteps, float stepSize, float mass)
             {
@@ -111,11 +113,16 @@ Shader "Hidden/BlackHole"
                     // Identify the event horizon
                     float2 hitInfo = raySphere(_Position, _SchwarzschildRadius * 1.6f, rayOrigin, rayDir);
                     float dstToEH = hitInfo.x;
-                    float dstThroughEH = hitInfo.y;
+
+                    // Ensure we account for scene depth (so that event horizon is not rendered overtop of everything)
+                    float sceneDepthNonLinear = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv);
+                    float sceneDepth = LinearEyeDepth(sceneDepthNonLinear) * length(i.viewVector);
+                    float dstThroughEH = hitInfo.y; //float dstThroughEH = min(hitInfo.y, sceneDepth - dstToEH);
 
                     // Move the rayOrigin to the first point within the distortion bounds
                     rayOrigin += rayDir * dstToBounds;
-                    float4 rayPos = RaymarchScene(rayOrigin, rayDir, _NumSteps, _StepSize, mass);
+                    int numSteps = _MaxDistortRadius * 2; // There should be enough steps to make it entirely through the distortion radius
+                    float4 rayPos = RaymarchScene(rayOrigin, rayDir, numSteps, _StepSize, mass);
 
                     // Warp the screen space UV's according the effects of Gravitational Lensing
                     float3 distortedRayDir = normalize(rayPos - rayOrigin);
@@ -123,8 +130,37 @@ Shader "Hidden/BlackHole"
                     float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
 
                     float2 distortedScreenUV = float2(rayUVProjection.x + 0.5, rayUVProjection.y / 1.5 + 0.5);
-                    uv = distortedScreenUV;
+                    
+                    // If we are within the fade-out distance, blend the uv's
+                    float blendFactor = 0;
+                    if (dstThroughBounds <= _DistortFadeOutDistance)
+                    {
+                        blendFactor = pow(remap01(_DistortFadeOutDistance, 0, dstThroughBounds), _FadePower);
+
+                        #if DEBUGFADE
+                        return blendFactor;
+                        #endif
+                    }
+
+                    uv = lerp(distortedScreenUV, i.uv, blendFactor);
                     float4 finalCol = tex2D(_MainTex, uv);
+
+                    // Accretion Disc
+                    float _DiscThickness = 0.01;
+                    float _DiscInnerWidth = 20;
+                    float _DiscOuterWidth = 200;
+                    float3 _DiscDir = float3(0, 1, 0);
+
+                    float3 p1 = _Position - 0.5 * _DiscThickness * _DiscDir;
+                    float3 p2 = _Position + 0.5 * _DiscThickness * _DiscDir;
+                    float discDst = intersectDisc(rayOrigin, distortedRayDir, p1, p2, _DiscDir, _DiscOuterWidth, _DiscInnerWidth);
+                    float4 discCol = 0;
+
+                    if (discDst < maxFloat)
+                    {
+                        //discCol = discDst;
+                        //finalCol += discCol;
+                    }
 
                     // If we are within the Schwarzschild Radius, render the event horizon
                     if (dstThroughEH > 0 || rayPos.w == 1)
