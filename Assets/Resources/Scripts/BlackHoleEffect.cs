@@ -28,31 +28,32 @@ public class BlackHoleEffect : ImageEffect
         base.BuildMaterials();
         materials.Clear();
 
-        for (int i = 0; i < instances.Count; i++)
+        if(renderEffect)
         {
-            Singularity instance = instances[i];
-            Material material = new Material(effectShader);
+            for (int i = 0; i < instances.Count; i++)
+            {
+                Singularity instance = instances[i];
+                Material material = new Material(effectShader);
 
-            // Update material to match settings
-            material.SetColor("_EventHorizonColor", settings.EventHorizonColor);
-            material.SetFloat("_StepSize", settings.StepSize);
+                // Update material to match settings
+                material.SetColor("_EventHorizonColor", settings.EventHorizonColor);
+                material.SetFloat("_StepSize", settings.StepSize);
 
-            material.SetFloat("_MaxDistortRadius", settings.MaxDistortRadius);
-            material.SetFloat("_DistortFadeOutDistance", settings.DistortFadeOutDistance);
-            material.SetFloat("_FadePower", settings.FadePower);
-            if(settings.DebugFade){
-                material.EnableKeyword("DEBUGFADE");
+                material.SetFloat("_MaxDistortRadius", settings.MaxDistortRadius);
+                material.SetFloat("_DistortFadeOutDistance", settings.DistortFadeOutDistance);
+                material.SetFloat("_FadePower", settings.FadePower);
+                if (settings.DebugFade){
+                    material.EnableKeyword("DEBUGFADE");
+                }
+                else{
+                    material.DisableKeyword("DEBUGFADE");
+                }
+
+                material.SetVector("_Position", instance.transform.position);
+                material.SetFloat("_SchwarzschildRadius", instance.SchwarzschildRadius);
+                materials.Add(material);
             }
-            else{
-                material.DisableKeyword("DEBUGFADE");
-            }
-
-            material.SetVector("_Position", instance.transform.position);
-            material.SetFloat("_SchwarzschildRadius", instance.SchwarzschildRadius);
-
-            materials.Add(material);
         }
-
         return materials;
     }
 }

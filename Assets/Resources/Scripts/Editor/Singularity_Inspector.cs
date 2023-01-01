@@ -42,7 +42,6 @@ public class Singularity_Inspector : Editor
             using (new EditorGUI.DisabledScope(true)){
                 EditorGUILayout.ObjectField("Script", MonoScript.FromMonoBehaviour((MonoBehaviour)target), GetType(), false);
             }
-
             EditorGUILayout.PropertyField(schwarzschildRadius);
         }
     }
@@ -65,10 +64,9 @@ public class Singularity_Inspector : Editor
                         singularityBase.SetDummyEventHorizon(drawDummyEventHorizon.boolValue);
                     }
                 }
-
-                GUI.enabled = false;
-                EditorGUILayout.FloatField("Mass", singularityBase.Mass);
-                GUI.enabled = true;
+                using (new EditorGUI.DisabledGroupScope(true)){
+                    EditorGUILayout.FloatField("Mass", singularityBase.Mass);
+                }
             }
             EditorGUI.indentLevel--;
         }

@@ -92,6 +92,7 @@ Shader "Hidden/BlackHole"
 
             fixed4 frag(v2f i) : SV_Target
             {
+                // Determine the origin & direction of our ray to march through the scene
                 float4 originalCol = tex2D(_MainTex, i.uv);
                 float3 rayOrigin = _WorldSpaceCameraPos;
                 float3 rayDir = normalize(i.viewVector);
@@ -99,8 +100,7 @@ Shader "Hidden/BlackHole"
                 float speedOfLightSqrd = pow(speedOfLight, 2);
                 float mass = (_SchwarzschildRadius * speedOfLightSqrd) / (gravitationalConst * 2); // Re-arranged equation of Schwarzschild Radius
 
-                // If we are within the Schwarzschild Radius, render the event horizon
-
+                // Figure out where the render bounds are
                 float2 boundsHitInfo = raySphere(_Position, _MaxDistortRadius, rayOrigin, rayDir);
                 float dstToBounds = boundsHitInfo.x;
                 float dstThroughBounds = boundsHitInfo.y;
@@ -113,29 +113,15 @@ Shader "Hidden/BlackHole"
                     float dstToEH = hitInfo.x;
                     float dstThroughEH = hitInfo.y;
 
-                    // ATTEMPTS TO EXCLUDE FORGROUND GEOMETRY FROM LENSING - RESULTS IN WEIRD RENDERING
-                    // Ensure we account for scene depth (so that event horizon is not rendered overtop of everything)
-                    //float sceneDepthNonLinear = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv);
-                    //float sceneDepth = LinearEyeDepth(sceneDepthNonLinear) * length(i.viewVector);
-                    //float depthToEH = sceneDepth - dstToEH;
-                    //float dstThroughEH = min(hitInfo.y, depthToEH);
-
-                    // Linear depth values close to 1 will be the skybox, so we should exlude these
-                    //float depth01 = Linear01Depth(sceneDepthNonLinear);
-                    //if (sceneDepth > 0 && depth01 < 0.999){
-                    //    return originalCol;
-                    //}
-
                     // Move the rayOrigin to the first point within the distortion bounds
                     rayOrigin += rayDir * dstToBounds;
                     int numSteps = _MaxDistortRadius * 2; // There should be enough steps to make it entirely through the distortion radius
                     float4 rayPos = RaymarchScene(rayOrigin, rayDir, numSteps, _StepSize, mass);
 
-                    // Warp the screen space UV's according the effects of Gravitational Lensing
+                    // Convert the rayPos to a screen space position which can be used to read the screen UVs
                     float3 distortedRayDir = normalize(rayPos - rayOrigin);
                     float4 rayCameraSpace = mul(unity_WorldToCamera, float4(distortedRayDir, 0));
                     float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
-
                     float2 distortedScreenUV = float2(rayUVProjection.x / 2 + 0.5, rayUVProjection.y / 2 + 0.5);
                     
                     // If we are within the fade-out distance, blend the uv's
@@ -143,12 +129,12 @@ Shader "Hidden/BlackHole"
                     if (dstThroughBounds <= _DistortFadeOutDistance)
                     {
                         blendFactor = pow(remap01(_DistortFadeOutDistance, 0, dstThroughBounds), _FadePower);
-
                         #if DEBUGFADE
                         return blendFactor;
                         #endif
                     }
                     
+                    // Interpolate between the original uv and the warped uv according to the blendFactor
                     float2 uv = lerp(distortedScreenUV, i.uv, blendFactor);
                     float4 finalCol = tex2D(_MainTex, uv);
 
@@ -164,6 +150,8 @@ Shader "Hidden/BlackHole"
                     // ...otherwise, bend the scene around the singularity
                     return finalCol;
                 }
+
+                // If we are not looking through the render bounds, just return the un-modified scene color
                 return originalCol;
             }
             ENDCG

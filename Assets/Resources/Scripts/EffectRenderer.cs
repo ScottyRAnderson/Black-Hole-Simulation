@@ -10,19 +10,20 @@ public class EffectRenderer : MonoBehaviour
 
     private static Material defaultMat;
 
-    //[ImageEffectOpaque]
     private void OnRenderImage(RenderTexture intialSource, RenderTexture finalDestination)
     {
-        if (effects == null || effects.Length == 0){
-            return;
-        }
-
         if (defaultMat == null){
             defaultMat = new Material(Shader.Find("Unlit/Texture"));
         }
-
-        if(Camera.current.depthTextureMode != DepthTextureMode.Depth){
+        if (Camera.current.depthTextureMode != DepthTextureMode.Depth){
             Camera.current.depthTextureMode = DepthTextureMode.Depth;
+        }
+
+        // If no effects are given, blit the default mat
+        if (effects == null || effects.Length == 0)
+        {
+            Graphics.Blit(intialSource, finalDestination, defaultMat);
+            return;
         }
 
         List<RenderTexture> temporaryTextures = new List<RenderTexture>();
@@ -32,10 +33,6 @@ public class EffectRenderer : MonoBehaviour
         for (int i = 0; i < effects.Length; i++)
         {
             ImageEffect effect = effects[i];
-            if(!effect.RenderEffect){
-                continue;
-            }
-
             if (i == effects.Length - 1)
             {
                 // If final effect, render into final destination
@@ -89,7 +86,7 @@ public class EffectRenderer : MonoBehaviour
         }
 
         // If a given material is null, blit the default mat
-        if (currentDestination != destination){
+        if (currentDestination != destination || materials.Count == 0){
             Graphics.Blit(currentSource, destination, defaultMat);
         }
 
