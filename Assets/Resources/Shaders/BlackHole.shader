@@ -96,8 +96,6 @@ Shader "Hidden/BlackHole"
                 float3 rayOrigin = _WorldSpaceCameraPos;
                 float3 rayDir = normalize(i.viewVector);
 
-                float2 uv = i.uv;
-
                 float speedOfLightSqrd = pow(speedOfLight, 2);
                 float mass = (_SchwarzschildRadius * speedOfLightSqrd) / (gravitationalConst * 2); // Re-arranged equation of Schwarzschild Radius
 
@@ -111,13 +109,22 @@ Shader "Hidden/BlackHole"
                 if (dstThroughBounds > 0)
                 {
                     // Identify the event horizon
-                    float2 hitInfo = raySphere(_Position, _SchwarzschildRadius * 1.6f, rayOrigin, rayDir);
+                    float2 hitInfo = raySphere(_Position, _SchwarzschildRadius, rayOrigin, rayDir); // _SchwarzschildRadius * 1.6f
                     float dstToEH = hitInfo.x;
+                    float dstThroughEH = hitInfo.y;
 
+                    // ATTEMPTS TO EXCLUDE FORGROUND GEOMETRY FROM LENSING - RESULTS IN WEIRD RENDERING
                     // Ensure we account for scene depth (so that event horizon is not rendered overtop of everything)
-                    float sceneDepthNonLinear = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv);
-                    float sceneDepth = LinearEyeDepth(sceneDepthNonLinear) * length(i.viewVector);
-                    float dstThroughEH = hitInfo.y; //float dstThroughEH = min(hitInfo.y, sceneDepth - dstToEH);
+                    //float sceneDepthNonLinear = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv);
+                    //float sceneDepth = LinearEyeDepth(sceneDepthNonLinear) * length(i.viewVector);
+                    //float depthToEH = sceneDepth - dstToEH;
+                    //float dstThroughEH = min(hitInfo.y, depthToEH);
+
+                    // Linear depth values close to 1 will be the skybox, so we should exlude these
+                    //float depth01 = Linear01Depth(sceneDepthNonLinear);
+                    //if (sceneDepth > 0 && depth01 < 0.999){
+                    //    return originalCol;
+                    //}
 
                     // Move the rayOrigin to the first point within the distortion bounds
                     rayOrigin += rayDir * dstToBounds;
@@ -129,7 +136,7 @@ Shader "Hidden/BlackHole"
                     float4 rayCameraSpace = mul(unity_WorldToCamera, float4(distortedRayDir, 0));
                     float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
 
-                    float2 distortedScreenUV = float2(rayUVProjection.x + 0.5, rayUVProjection.y / 1.5 + 0.5);
+                    float2 distortedScreenUV = float2(rayUVProjection.x / 2 + 0.5, rayUVProjection.y / 2 + 0.5);
                     
                     // If we are within the fade-out distance, blend the uv's
                     float blendFactor = 0;
@@ -141,31 +148,14 @@ Shader "Hidden/BlackHole"
                         return blendFactor;
                         #endif
                     }
-
-                    uv = lerp(distortedScreenUV, i.uv, blendFactor);
+                    
+                    float2 uv = lerp(distortedScreenUV, i.uv, blendFactor);
                     float4 finalCol = tex2D(_MainTex, uv);
-
-                    // Accretion Disc
-                    float _DiscThickness = 0.01;
-                    float _DiscInnerWidth = 20;
-                    float _DiscOuterWidth = 200;
-                    float3 _DiscDir = float3(0, 1, 0);
-
-                    float3 p1 = _Position - 0.5 * _DiscThickness * _DiscDir;
-                    float3 p2 = _Position + 0.5 * _DiscThickness * _DiscDir;
-                    float discDst = intersectDisc(rayOrigin, distortedRayDir, p1, p2, _DiscDir, _DiscOuterWidth, _DiscInnerWidth);
-                    float4 discCol = 0;
-
-                    if (discDst < maxFloat)
-                    {
-                        //discCol = discDst;
-                        //finalCol += discCol;
-                    }
 
                     // If we are within the Schwarzschild Radius, render the event horizon
                     if (dstThroughEH > 0 || rayPos.w == 1)
                     {
-                        if (dstThroughEH < 1){
+                        if (dstThroughEH < 1 && rayPos.w == 0){
                             return finalCol;
                         }
                         return _EventHorizonColor;

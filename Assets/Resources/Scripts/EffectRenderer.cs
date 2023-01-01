@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Unity.VisualScripting.Member;
 
 [ExecuteInEditMode][ImageEffectAllowedInSceneView]
 public class EffectRenderer : MonoBehaviour
@@ -20,6 +19,10 @@ public class EffectRenderer : MonoBehaviour
 
         if (defaultMat == null){
             defaultMat = new Material(Shader.Find("Unlit/Texture"));
+        }
+
+        if(Camera.current.depthTextureMode != DepthTextureMode.Depth){
+            Camera.current.depthTextureMode = DepthTextureMode.Depth;
         }
 
         List<RenderTexture> temporaryTextures = new List<RenderTexture>();
