@@ -10,6 +10,7 @@ public class EffectRenderer : MonoBehaviour
 
     private static Material defaultMat;
 
+    [ImageEffectOpaque]
     private void OnRenderImage(RenderTexture intialSource, RenderTexture finalDestination)
     {
         if (defaultMat == null){
@@ -81,7 +82,7 @@ public class EffectRenderer : MonoBehaviour
                 temporaryTextures.Add(currentDestination); // Record temporary texture to be released later
             }
 
-            Graphics.Blit(currentSource, destination, material);
+            Graphics.Blit(currentSource, currentDestination, material);
             currentSource = currentDestination;
         }
 
@@ -96,11 +97,7 @@ public class EffectRenderer : MonoBehaviour
         }
     }
 
-    public static void RenderMaterial(RenderTexture source, RenderTexture destination, Material material){
-        Graphics.Blit(source, destination, material);
-    }
-
-    public static RenderTexture TemporaryRenderTexture(RenderTexture template){
-        return RenderTexture.GetTemporary(template.descriptor);
+    public static RenderTexture TemporaryRenderTexture(RenderTexture texture){
+        return RenderTexture.GetTemporary(texture.descriptor);
     }
 }

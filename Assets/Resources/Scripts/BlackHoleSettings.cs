@@ -5,7 +5,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "BlackHole/Settings", fileName = "BlackHoleSettings")]
 public class BlackHoleSettings : ScriptableObject
 {
-    [SerializeField]
+    [SerializeField][ColorUsage(default, true)]
     private Color eventHorizonColor = Color.black;
     [SerializeField]
     private float stepSize = 0.1f;

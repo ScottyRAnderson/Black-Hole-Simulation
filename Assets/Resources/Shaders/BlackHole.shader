@@ -61,7 +61,7 @@ Shader "Hidden/BlackHole"
             float _DistortFadeOutDistance;
             float _FadePower;
 
-            float4 RaymarchScene(float3 rayOrigin, float3 rayDir, int numSteps, float stepSize, float mass)
+            float4 raymarchScene(float3 rayOrigin, float3 rayDir, int numSteps, float stepSize, float mass)
             {
                 float3 rayPos = rayOrigin;
 
@@ -72,8 +72,8 @@ Shader "Hidden/BlackHole"
                     float sqrLength = pow(length(difference), 2);
 
                     float3 direction = normalize(difference);
-                    float3 acceleration = direction * gravitationalConst * ((mass * 1e-13) / sqrLength);
-
+                    float3 acceleration = direction * gravitationalConst * ((mass * 1e-16) / sqrLength);
+                    
                     // Move the ray according to this force
                     rayDir += acceleration * stepSize;
                     rayPos += rayDir;
@@ -98,7 +98,7 @@ Shader "Hidden/BlackHole"
                 float3 rayDir = normalize(i.viewVector);
 
                 float speedOfLightSqrd = pow(speedOfLight, 2);
-                float mass = (_SchwarzschildRadius * speedOfLightSqrd) / (gravitationalConst * 2); // Re-arranged equation of Schwarzschild Radius
+                float singularityMass = (_SchwarzschildRadius * speedOfLightSqrd) / (gravitationalConst * 2); // Re-arranged equation of Schwarzschild Radius
 
                 // Figure out where the render bounds are
                 float2 boundsHitInfo = raySphere(_Position, _MaxDistortRadius, rayOrigin, rayDir);
@@ -116,14 +116,14 @@ Shader "Hidden/BlackHole"
                     // Move the rayOrigin to the first point within the distortion bounds
                     rayOrigin += rayDir * dstToBounds;
                     int numSteps = _MaxDistortRadius * 2; // There should be enough steps to make it entirely through the distortion radius
-                    float4 rayPos = RaymarchScene(rayOrigin, rayDir, numSteps, _StepSize, mass);
+                    float4 rayPos = raymarchScene(rayOrigin, rayDir, numSteps, _StepSize, singularityMass);
 
                     // Convert the rayPos to a screen space position which can be used to read the screen UVs
                     float3 distortedRayDir = normalize(rayPos - rayOrigin);
                     float4 rayCameraSpace = mul(unity_WorldToCamera, float4(distortedRayDir, 0));
                     float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
                     float2 distortedScreenUV = float2(rayUVProjection.x / 2 + 0.5, rayUVProjection.y / 2 + 0.5);
-                    
+
                     // If we are within the fade-out distance, blend the uv's
                     float blendFactor = 0;
                     if (dstThroughBounds <= _DistortFadeOutDistance)
