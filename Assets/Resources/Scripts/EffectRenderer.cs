@@ -34,6 +34,10 @@ public class EffectRenderer : MonoBehaviour
         for (int i = 0; i < effects.Length; i++)
         {
             ImageEffect effect = effects[i];
+            if(!effect.RenderEffect){
+                continue;
+            }
+
             if (i == effects.Length - 1)
             {
                 // If final effect, render into final destination

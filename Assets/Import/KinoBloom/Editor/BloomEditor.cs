@@ -32,6 +32,7 @@ namespace Kino
     {
         BloomGraphDrawer _graph;
 
+        SerializedProperty renderEffect;
         SerializedProperty _threshold;
         SerializedProperty _softKnee;
         SerializedProperty _radius;
@@ -44,6 +45,7 @@ namespace Kino
         void OnEnable()
         {
             _graph = new BloomGraphDrawer();
+            renderEffect = serializedObject.FindProperty("renderEffect");
             _threshold = serializedObject.FindProperty("_threshold");
             _softKnee = serializedObject.FindProperty("_softKnee");
             _radius = serializedObject.FindProperty("_radius");
@@ -63,6 +65,7 @@ namespace Kino
                 EditorGUILayout.Space();
             }
 
+            EditorGUILayout.PropertyField(renderEffect);
             EditorGUILayout.PropertyField(_threshold, _textThreshold);
             EditorGUILayout.PropertyField(_softKnee);
             EditorGUILayout.PropertyField(_intensity);
