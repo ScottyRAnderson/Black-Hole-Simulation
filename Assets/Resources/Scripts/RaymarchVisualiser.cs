@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using static UnityEditor.ShaderData;
+using System.Runtime.CompilerServices;
 
 [ExecuteInEditMode]
 public class RaymarchVisualiser : MonoBehaviour
@@ -12,7 +12,7 @@ public class RaymarchVisualiser : MonoBehaviour
     private enum DisplayMode
     { 
         Single,
-        UV
+        Multiple
     }
 
     [SerializeField]
@@ -65,7 +65,7 @@ public class RaymarchVisualiser : MonoBehaviour
         }
         else
         {
-            List<List<Vector3>> positions = SimulateMultiple(rayOrigin.position, stepSize, numSteps);
+            List<List<Vector3>> positions = SimulateMultiple(rayOrigin.position, rayOrigin.forward, stepSize, numSteps);
             for (int i = 0; i < positions.Count; i++)
             {
                 List<Vector3> poss = positions[i];
@@ -88,6 +88,34 @@ public class RaymarchVisualiser : MonoBehaviour
         }
     }
 
+    //private List<Vector3> SimulateSingle(Vector3 rayPos, Vector3 rayDir, float stepSize, int numSteps)
+    //{
+    //    List<Vector3> positions = new List<Vector3>{
+    //        rayPos
+    //    };
+    //
+    //    for (int i = 0; i < numSteps; i++)
+    //    {
+    //        // Distort the ray according to Newton's law of universal gravitation
+    //        Vector3 difference = singularity.transform.position - rayPos;
+    //        float sqrLength = difference.sqrMagnitude;
+    //
+    //        Vector3 direction = difference.normalized;
+    //        Vector3 acceleration = direction * gravitationalConst * ((singularity.Mass * rayMass) / sqrLength);
+    //
+    //        // Move the ray according to this force
+    //        rayDir += acceleration * stepSize;
+    //        rayPos += rayDir;
+    //
+    //        if(blockAbsorbedRays && Vector3.Distance(rayPos, singularity.transform.position) < singularity.SchwarzschildRadius){
+    //            break;
+    //        }
+    //
+    //        positions.Add(rayPos);
+    //    }
+    //    return positions;
+    //}
+
     private List<Vector3> SimulateSingle(Vector3 rayPos, Vector3 rayDir, float stepSize, int numSteps)
     {
         List<Vector3> positions = new List<Vector3>{
@@ -96,18 +124,16 @@ public class RaymarchVisualiser : MonoBehaviour
 
         for (int i = 0; i < numSteps; i++)
         {
-            // Distort the ray according to Newton's law of universal gravitation
-            Vector3 difference = singularity.transform.position - rayPos;
-            float sqrLength = difference.sqrMagnitude;
+            Vector3 dirToCentre = singularity.transform.position - rayPos;
+            float dstToCentre = dirToCentre.magnitude;
+            dirToCentre /= dstToCentre;
 
-            Vector3 direction = difference.normalized;
-            Vector3 acceleration = direction * gravitationalConst * ((singularity.Mass * rayMass) / sqrLength);
+            float force = singularity.SchwarzschildRadius / (dstToCentre * dstToCentre);
+            rayDir = Vector3.Normalize(rayDir + dirToCentre * force * stepSize);
 
-            // Move the ray according to this force
-            rayDir += acceleration * stepSize;
-            rayPos += rayDir;
+            rayPos += rayDir * stepSize;
 
-            if(blockAbsorbedRays && Vector3.Distance(rayPos, singularity.transform.position) < singularity.SchwarzschildRadius){
+            if (blockAbsorbedRays && Vector3.Distance(rayPos, singularity.transform.position) < singularity.SchwarzschildRadius){
                 break;
             }
 
@@ -117,7 +143,7 @@ public class RaymarchVisualiser : MonoBehaviour
     }
 
     // Simulates multiple rays at different uv coordinates
-    private List<List<Vector3>> SimulateMultiple(Vector3 rayPos, float stepSize, int numSteps)
+    private List<List<Vector3>> SimulateMultiple(Vector3 rayPos, Vector3 forward, float stepSize, int numSteps)
     {
         List<List<Vector3>> positions = new List<List<Vector3>>();
 
@@ -128,8 +154,7 @@ public class RaymarchVisualiser : MonoBehaviour
             for (float y = 0; y < 1f; y += step)
             {
                 Vector2 uv = new Vector2(x, y) - new Vector2(offset, offset);
-                Vector3 rayDir = Camera.main.projectionMatrix.inverse * new Vector3(uv.x, uv.y, 0f);
-                rayDir = Camera.main.cameraToWorldMatrix * rayDir;
+                Vector3 rayDir = transform.localToWorldMatrix * new Vector3(uv.x, uv.y, 0f);
                 rayDir.Normalize();
 
                 List<Vector3> singlePositions = SimulateSingle(rayPos, rayDir, stepSize, numSteps);

@@ -12,9 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8bc7ac92d0d6124b9efd3b8794cca1e, type: 3}
   m_Name: BlackHoleSettings
   m_EditorClassIdentifier: 
+  stepCount: 250
+  stepSize: 0.04
+  gravitationalConst: 0.42
+  maxEffectRadius: 5
+  effectFadeOutDist: 10
+  effectFalloff: 1
+  debugFalloff: 0
   eventHorizonColor: {r: 0, g: 0, b: 0, a: 1}
-  stepSize: 0.23
-  maxDistortRadius: 250
-  distortFadeOutDistance: 400
-  fadePower: 1
-  debugFade: 0
+  accretionColor: {r: 0.05660379, g: 0.017158005, b: 0.0034709887, a: 0}
+  accretionFalloff: 2.4
+  accretionIntensity: 10.72
+  accretionRadius: {x: 0.15, y: 0.5}
+  accretionWidth: 0
+  accretionNoise:
+    enabled: 1
+    noiseScale: 0.38
+    octaves: 8
+    persistance: 0.4
+    lacunarity: 3
+    heightScalar: 1
+    scrollRate: 4
+  accretionTex: {fileID: 0}
+  testVar: {x: 1.4, y: 0, z: 0, w: 0}
