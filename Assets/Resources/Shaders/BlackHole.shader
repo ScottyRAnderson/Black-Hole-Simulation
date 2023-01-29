@@ -10,7 +10,6 @@ Shader "Hidden/BlackHole"
         Cull Off
         ZWrite Off
         ZTest Always
-
         Pass
         {
             CGPROGRAM
@@ -20,6 +19,7 @@ Shader "Hidden/BlackHole"
 
             #include "UnityCG.cginc"
             #include "./Includes/Math.cginc"
+            #include "./Includes/BlackHoleLogic.cginc"
 
             struct appdata
             {
@@ -37,36 +37,19 @@ Shader "Hidden/BlackHole"
 
             sampler2D _MainTex;
             sampler2D _CameraDepthTexture;
+            float3 _Position;
+            float _SchwarzschildRadius;
+
+            float3 _ShadowColor;
 
             float _StepSize;
             int _StepCount;
             float _GravitationalConst;
+            float _Attenuation;
 
             float _MaxEffectRadius;
             float _EffectFadeOutDist;
             float _EffectFalloff;
-
-            float3 _EventHorizonColor;
-            float3 _AccretionColor;
-            float _AccretionFalloff;
-            float _AccretionIntensity;
-            float _AccretionOuterRadius;
-            float _AccretionInnerRadius;
-            float _AccretionWidth;
-            float3 _AccretionDir;
-
-            float _NoiseScale;
-            int _Octaves;
-            float _Persistance;
-            float _Lacunarity;
-            float _HeightScalar;
-            float _ScrollRate;
-            sampler2D _AccretionTex;
-
-            float3 _Position;
-            float _SchwarzschildRadius;
-
-            float4 _TestVar;
 
             v2f vert(appdata v)
             {
@@ -82,75 +65,13 @@ Shader "Hidden/BlackHole"
                 return o;
             }
 
-            float sample3DPerlin(float3 p)
-            {
-                float perlinValue = 0;
-                float amplitude = 1;
-                float frequency = 1;
-                float contribution = 1;
-
-                // Loop through each octave and contribute
-                for (int o = 0; o < _Octaves; o++)
-                {
-                    float3 offsetSample = p / _NoiseScale * frequency;
-
-                    float noiseValue = (perlinNoise(offsetSample) + 0.5f) * contribution;
-                    perlinValue += noiseValue * amplitude;
-
-                    amplitude *= _Persistance;
-                    frequency *= _Lacunarity;
-                    contribution /= 2.0f;
-                }
-
-                perlinValue *= _HeightScalar;
-                return perlinValue;
-            }
-
-            float4 accretionColor(float3 samplePos, float transmittance)
-            {
-                float3 finalCol = 0;
-
-                // If accretion disc not sampled, return 0
-                if (transmittance < 1){
-                    return 0;
-                }
-
-                float distFromDisc = dot(_AccretionDir, samplePos - _Position);
-                float distFromCenter = distance(samplePos, _Position);
-
-                float3 radialCoord = cartesianToRadial(samplePos, distFromCenter, distFromDisc);
-                radialCoord.y += _Time.x * _ScrollRate;
-
-                float perlinValue = sample3DPerlin(radialCoord);
-
-                float alpha = 1 - perlinValue;
-
-                float falloff = pow(remap01(_AccretionOuterRadius, 0, distFromCenter), _AccretionFalloff);
-                finalCol = lerp(_AccretionColor, 1 * _AccretionIntensity, falloff);
-                finalCol *= perlinValue;
-
-                return float4(finalCol, alpha);
-            }
-
-            float4 sampleGasCloud(float3 rayPos)
-            {
-
-            }
-
-            float sampleAccretion(float3 rayDir, float3 rayPos)
-            {
-                float3 p1 = _Position - 0.5 * _AccretionWidth * _AccretionDir;
-                float3 p2 = _Position + 0.5 * _AccretionWidth * _AccretionDir;
-
-                float discDst = intersectDisc(rayPos, rayDir, p1, p2, _AccretionDir, _AccretionOuterRadius, _AccretionInnerRadius);
-                return discDst;
-            }
-
+            // Re-directs a view ray to move under the influence of gravity
+            // Mimics the effect of gravitational lensing seen in warped spacetime
             void warpRay(inout float3 rayDir, float3 rayPos, float stepSize)
             {
                 float3 centerDir = _Position - rayPos;
                 float distance = length(centerDir);
-                float sqrLength = pow(distance, _TestVar.x); //2
+                float sqrLength = pow(distance, _Attenuation);
                 centerDir = normalize(centerDir);
 
                 // Application of Newton's law of universal gravitation (modified variant)
@@ -182,10 +103,8 @@ Shader "Hidden/BlackHole"
                     // Move the rayOrigin to the first point within the distortion bounds
                     rayOrigin += rayDir * dstToBounds;
                     float3 rayPos = rayOrigin;
-
-                    float transmittance = 0;
-                    float3 discSample = float3(maxFloat, 0, 0);
-                    float4 gasColor = 0;
+                    float3 gasVolume = 0;
+                    float shadowMask = 0;
 
                     // March our ray through the scene
                     for (float s = 0; s < _StepCount; s++)
@@ -193,58 +112,55 @@ Shader "Hidden/BlackHole"
                         // Step ray forward
                         warpRay(rayDir, rayPos, _StepSize);
                         rayPos += rayDir * _StepSize;
+                        sampleGasVolume(gasVolume, rayPos, rayDir, _Position, _MaxEffectRadius, _StepSize);
 
-                        // Check for accretion disc
-                        if (transmittance < 1)
+                        // Ray should be terminated if it falls within the event horizon
+                        if (distance(rayPos, _Position) < _SchwarzschildRadius + _StepSize)
                         {
-                            float discDst = sampleAccretion(rayDir, rayPos);
-                            if (discDst < _StepSize)
-                            {
-                                transmittance = 1;
-                                discSample = rayPos + rayDir * discDst;
-                            }
+                            shadowMask = 1;
+                            break;
                         }
-
-                        if (distance(rayPos, _Position) < _SchwarzschildRadius) {
-                            //break;
-                        }
+                        
+                        // ...Likewise if the ray leaves the simulation bounds
                         if (distance(rayPos, _Position) > _MaxEffectRadius) {
                             break;
                         }
                     }
 
-                    //FIGURE THIS OUT YOURSELF:
-                    float2 distortedScreenUV = float2(0, 0);
-                    if (true)
+                    float3 finalCol;
+
+                    // If the ray is absorbed by the event horizon, render the shadow
+                    if (shadowMask > 0){
+                        finalCol = _ShadowColor;
+                    }
+                    else
                     {
+                        // ...Otherwise, gravitationally lens the scene
+
                         // Convert the rayPos to a screen space position which can be used to read the screen UVs
                         float3 distortedRayDir = normalize(rayPos - rayOrigin);
                         float4 rayCameraSpace = mul(unity_WorldToCamera, float4(distortedRayDir, 0));
                         float4 rayUVProjection = mul(unity_CameraProjection, float4(rayCameraSpace));
-                        distortedScreenUV = float2(rayUVProjection.x / 2 + 0.5, rayUVProjection.y / 2 + 0.5);
+                        float2 distortedScreenUV = float2(rayUVProjection.x / 2 + 0.5, rayUVProjection.y / 2 + 0.5);
+
+                        // If we are within the fade-out distance, blend the uv's
+                        float blendFactor = 0;
+                        if (dstThroughBounds <= _EffectFadeOutDist)
+                        {
+                            blendFactor = pow(remap01(_EffectFadeOutDist, 0, dstThroughBounds), _EffectFalloff);
+                            #if DEBUGFALLOFF
+                            return blendFactor;
+                            #endif
+                        }
+
+                        // Interpolate between the original uv and the warped uv according to the blendFactor
+                        float2 uv = lerp(distortedScreenUV, i.uv, blendFactor);
+                        finalCol = tex2D(_MainTex, uv);
                     }
-            
-                    // If we are within the fade-out distance, blend the uv's
-                    float blendFactor = 0;
-                    if (dstThroughBounds <= _EffectFadeOutDist)
-                    {
-                        blendFactor = pow(remap01(_EffectFadeOutDist, 0, dstThroughBounds), _EffectFalloff);
-                        #if DEBUGFALLOFF
-                        return blendFactor;
-                        #endif
-                    }
-                    
-                    // Interpolate between the original uv and the warped uv according to the blendFactor
-                    float2 uv = lerp(distortedScreenUV, i.uv, blendFactor);
-                    float3 finalCol = tex2D(_MainTex, uv);
-                    float alpha = 1;
 
-
-                    float4 discColor = accretionColor(discSample, transmittance);
-                    alpha = discColor.w;
-
-                    finalCol += discColor;
-                    return float4(finalCol, alpha);
+                    // Incorperate the gas disc effect
+                    finalCol += (1 - exp(-gasVolume));
+                    return float4(finalCol, 1);
                 }
             
                 // If we are not looking through the render bounds, just return the un-modified scene color

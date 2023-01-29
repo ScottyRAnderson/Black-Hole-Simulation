@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using System.Runtime.CompilerServices;
 
+#if UNITY_EDITOR
 [ExecuteInEditMode]
 public class RaymarchVisualiser : MonoBehaviour
 {
@@ -165,3 +165,4 @@ public class RaymarchVisualiser : MonoBehaviour
         return positions;
     }
 }
+#endif

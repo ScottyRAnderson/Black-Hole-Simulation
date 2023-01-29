@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1c5958a6301a47b98bf07db8620f3dd, type: 3}
   m_Name: BloomEffect
   m_EditorClassIdentifier: 
-  renderEffect: 0
+  renderEffect: 1
   effectShader: {fileID: 0}
   _threshold: 0
   _softKnee: 0.136
   _radius: 7
-  _intensity: 0.34
+  _intensity: 0.2
   _highQuality: 1
   _antiFlicker: 1
   _shader: {fileID: 0}

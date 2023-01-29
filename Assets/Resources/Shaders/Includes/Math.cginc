@@ -39,15 +39,27 @@ float remap(float v, float minOld, float maxOld, float minNew, float maxNew) {
 	return minNew + (v - minOld) * (maxNew - minNew) / (maxOld - minOld);
 }
 
+// Referenced from https://iquilezles.org/articles/functions/
+// Power curve function is a generalized parabola function
+// Allows both sides of the curve to be independently manipulated
+float pcurve(float x, float a, float b)
+{
+    float k = pow(a + b, a + b) / (pow(a, a) * pow(b, b));
+    return k * pow(x, a) * pow(1.0 - x, b);
+}
+
 // Based upon http://www.vias.org/comp_geometry/math_coord_convert_3d.htm
 float3 cartesianToRadial(float3 cartesian, float distFromCenter, float distFromDisc)
 {
     float3 radialCoord;
-    radialCoord.x = distFromCenter * 1.5 + 0.5f;
-    radialCoord.y = atan2(-cartesian.x, -cartesian.z) * 1.5;
-    radialCoord.z = distFromDisc * 1.5;
+    radialCoord.x = distFromCenter * 1.5f + 0.5f;
+    radialCoord.y = atan2(-cartesian.x, -cartesian.z) * 1.5f;
+    radialCoord.z = distFromDisc * 1.5f;
     return radialCoord;
 }
+
+// Disc, Plane & Cylinder intersection logic referenced from Kelvin van Hoorn
+// Source: https://kelvinvanhoorn.com/
 
 // Based upon https://mrl.cs.nyu.edu/~dzorin/rend05/lecture2.pdf
 float2 intersectInfiniteCylinder(float3 rayOrigin, float3 rayDir, float3 cylinderOrigin, float3 cylinderDir, float cylinderRadius)
@@ -60,9 +72,7 @@ float2 intersectInfiniteCylinder(float3 rayOrigin, float3 rayDir, float3 cylinde
     float c = dot(c0, c0) - cylinderRadius * cylinderRadius;
 
     float b = 2 * dot(a0, c0);
-
     float discriminant = b * b - 4 * a * c;
-
     if (discriminant > 0) {
         float s = sqrt(discriminant);
         float dstToNear = max(0, (-b - s) / (2 * a));
@@ -81,9 +91,7 @@ float intersectInfinitePlane(float3 rayOrigin, float3 rayDir, float3 planeOrigin
     float a = 0;
     float b = dot(rayDir, planeDir);
     float c = dot(rayOrigin, planeDir) - dot(planeDir, planeOrigin);
-
     float discriminant = b * b - 4 * a * c;
-
     return -c / b;
 }
 
@@ -100,8 +108,7 @@ float intersectDisc(float3 rayOrigin, float3 rayDir, float3 p1, float3 p2, float
         float finiteC2 = dot(discDir, rayOrigin + rayDir * cylinderDst - p2);
 
         // Ray intersects with edges of the cylinder/disc
-        if (finiteC1 > 0 && finiteC2 < 0 && cylinderDst > 0)
-        {
+        if (finiteC1 > 0 && finiteC2 < 0 && cylinderDst > 0){
             discDst = cylinderDst;
         }
         else
@@ -116,8 +123,7 @@ float intersectDisc(float3 rayOrigin, float3 rayDir, float3 p1, float3 p2, float
             // Ray intersects with lower plane of cylinder/disc
             if (p1Dst > 0 && p1q1DstSqr < radiusSqr && p1q1DstSqr > innerRadiusSqr)
             {
-                if (p1Dst < discDst)
-                {
+                if (p1Dst < discDst){
                     discDst = p1Dst;
                 }
             }
@@ -129,74 +135,11 @@ float intersectDisc(float3 rayOrigin, float3 rayDir, float3 p1, float3 p2, float
             // Ray intersects with upper plane of cylinder/disc
             if (p2Dst > 0 && p2q2DstSqr < radiusSqr && p2q2DstSqr > innerRadiusSqr)
             {
-                if (p2Dst < discDst)
-                {
+                if (p2Dst < discDst){
                     discDst = p2Dst;
                 }
             }
         }
     }
-
     return discDst;
-}
-
-float easeIn(float interpolator) {
-    return interpolator * interpolator;
-}
-
-float easeOut(float interpolator) {
-    return 1 - easeIn(1 - interpolator);
-}
-
-float easeInOut(float interpolator) {
-    float easeInValue = easeIn(interpolator);
-    float easeOutValue = easeOut(interpolator);
-    return lerp(easeInValue, easeOutValue, interpolator);
-}
-
-float rand3dTo1d(float3 value, float3 dotDir = float3(12.9898, 78.233, 37.719)) {
-    //make value smaller to avoid artefacts
-    float3 smallValue = sin(value);
-    //get scalar value from 3d vector
-    float random = dot(smallValue, dotDir);
-    //make value more random by making it bigger and then taking the factional part
-    random = frac(sin(random) * 143758.5453);
-    return random;
-}
-
-float3 rand3dTo3d(float3 value) {
-    return float3(
-        rand3dTo1d(value, float3(12.989, 78.233, 37.719)),
-        rand3dTo1d(value, float3(39.346, 11.135, 83.155)),
-        rand3dTo1d(value, float3(73.156, 52.235, 09.151))
-        );
-}
-
-float perlinNoise(float3 value) {
-    float3 fraction = frac(value);
-
-    float interpolatorX = easeInOut(fraction.x);
-    float interpolatorY = easeInOut(fraction.y);
-    float interpolatorZ = easeInOut(fraction.z);
-
-    float cellNoiseZ[2];
-    [unroll]
-    for (int z = 0; z <= 1; z++) {
-        float cellNoiseY[2];
-        [unroll]
-        for (int y = 0; y <= 1; y++) {
-            float cellNoiseX[2];
-            [unroll]
-            for (int x = 0; x <= 1; x++) {
-                float3 cell = floor(value) + float3(x, y, z);
-                float3 cellDirection = rand3dTo3d(cell) * 2 - 1;
-                float3 compareVector = fraction - float3(x, y, z);
-                cellNoiseX[x] = dot(cellDirection, compareVector);
-            }
-            cellNoiseY[y] = lerp(cellNoiseX[0], cellNoiseX[1], interpolatorX);
-        }
-        cellNoiseZ[z] = lerp(cellNoiseY[0], cellNoiseY[1], interpolatorY);
-    }
-    float noise = lerp(cellNoiseZ[0], cellNoiseZ[1], interpolatorZ);
-    return noise;
 }
