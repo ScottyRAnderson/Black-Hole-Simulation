@@ -90,7 +90,7 @@ Shader "Hidden/BlackHole"
                 float3 rayDir = normalize(i.viewVector);
             
                 float speedOfLightSqrd = pow(speedOfLight, 2);
-                float singularityMass = (_SchwarzschildRadius * speedOfLightSqrd) / (gravitationalConst * 2); // Re-arranged equation of Schwarzschild Radius
+                float singularityMass = (_SchwarzschildRadius * speedOfLightSqrd) / (_GravitationalConst * 2); // Re-arranged equation of Schwarzschild Radius
             
                 // Figure out where the effect bounds are
                 float2 boundsHitInfo = raySphere(_Position, _MaxEffectRadius, rayOrigin, rayDir);
@@ -160,6 +160,10 @@ Shader "Hidden/BlackHole"
 
                     // Incorperate the gas disc effect
                     finalCol += (1 - exp(-gasVolume));
+
+                    float3 gravitationalShift = computeGravitationalShift(rayOrigin, _Position, _GravitationalConst, singularityMass);
+                    finalCol *= gravitationalShift;
+
                     return float4(finalCol, 1);
                 }
             

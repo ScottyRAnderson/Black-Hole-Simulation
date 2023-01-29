@@ -21,6 +21,7 @@ MonoBehaviour:
   effectFadeOutDist: 10
   effectFalloff: 1
   debugFalloff: 0
+  blueShiftPower: 3
   renderAccretion: 0
   accretionQuality: 0
   accretionMainColor: {r: 0.01886791, g: 0.0026379516, b: 0, a: 0}

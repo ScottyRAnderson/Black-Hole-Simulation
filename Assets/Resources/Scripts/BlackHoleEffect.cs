@@ -51,6 +51,8 @@ public class BlackHoleEffect : ImageEffect
                 material.DisableKeyword("DEBUGFALLOFF");
             }
 
+            material.SetFloat("_BlueShiftPower", settings.BlueShiftPower);
+
             material.SetInt("_AccretionQuality", !settings.RenderAccretion ? -1 : (int)settings.AccretionQualityLevel);
             material.SetColor("_AccretionMainColor", settings.AccretionMainColor);
             material.SetColor("_AccretionInnerColor", settings.AccretionInnerColor);

@@ -20,6 +20,8 @@ float _GasCloudThreshold;
 float _TransmittancePower;
 float _DensityPower;
 
+float _BlueShiftPower;
+
 // Samples from a 3D noise texture with a layered approach of varying scale and scroll rates
 float sampleNoiseTexture(float3 position, float densityFalloff = 0)
 {
@@ -119,4 +121,18 @@ void sampleGasVolume(inout float3 color, float3 position, float3 rayDir, float3 
 
     // Modify the color
     color += finalCol;
+}
+
+// Gravitational shift source: https://astronomy.swin.edu.au/cosmos/g/Gravitational+Redshift
+// As a photon travels toward/away from a mass, it may gain or lose energy causing it to change frequency
+// The closer we are to a large mass, photons get blue shifted
+float3 computeGravitationalShift(float3 position, float3 center, float gravConst, float mass)
+{
+    float dist = distance(position, center);
+    if (_BlueShiftPower <= 0 || dist < 0.001f){
+        return 1;
+    }
+    dist = pow(exp(dist) / 1.8f, _BlueShiftPower);
+    float shift = (gravConst * mass) / (dist * pow(speedOfLight, 2));
+    return lerp(1, float3(0, 0, 255), shift);
 }

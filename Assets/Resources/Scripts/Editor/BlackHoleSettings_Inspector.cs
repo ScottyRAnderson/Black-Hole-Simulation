@@ -22,6 +22,8 @@ public class BlackHoleSettings_Inspector : Editor
     private SerializedProperty effectFalloff;
     private SerializedProperty debugFalloff;
 
+    private SerializedProperty blueShiftPower;
+
     private SerializedProperty renderAccretion;
     private SerializedProperty accretionQuality;
     private SerializedProperty accretionMainColor;
@@ -52,6 +54,8 @@ public class BlackHoleSettings_Inspector : Editor
         effectFadeOutDist = serializedObject.FindProperty("effectFadeOutDist");
         effectFalloff = serializedObject.FindProperty("effectFalloff");
         debugFalloff = serializedObject.FindProperty("debugFalloff");
+
+        blueShiftPower = serializedObject.FindProperty("blueShiftPower");
 
         renderAccretion = serializedObject.FindProperty("renderAccretion");
         accretionQuality = serializedObject.FindProperty("accretionQuality");
@@ -105,6 +109,10 @@ public class BlackHoleSettings_Inspector : Editor
                 EditorGUILayout.PropertyField(effectFadeOutDist);
                 EditorGUILayout.PropertyField(effectFalloff);
                 EditorGUILayout.PropertyField(debugFalloff);
+
+                GUILayout.Space(5f);
+
+                EditorGUILayout.PropertyField(blueShiftPower);
             }
             EditorGUI.indentLevel--;
         }

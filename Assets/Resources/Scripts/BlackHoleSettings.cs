@@ -33,6 +33,9 @@ public class BlackHoleSettings : ScriptableObject
     private bool debugFalloff;
 
     [SerializeField]
+    private float blueShiftPower;
+
+    [SerializeField]
     private bool renderAccretion;
     [SerializeField]
     private AccretionQuality accretionQuality;
@@ -76,6 +79,8 @@ public class BlackHoleSettings : ScriptableObject
     public float EffectFalloff { get { return effectFalloff; } }
     public bool DebugFalloff { get { return debugFalloff; } }
 
+    public float BlueShiftPower { get { return blueShiftPower; } }
+
     public bool RenderAccretion { get { return renderAccretion; } }
     public AccretionQuality AccretionQualityLevel { get { return accretionQuality; } }
     public Color AccretionMainColor { get { return accretionMainColor; } }
@@ -100,6 +105,7 @@ public class BlackHoleSettings : ScriptableObject
         stepSize = Mathf.Max(stepSize, 0f);
         gravitationalConst = Mathf.Max(gravitationalConst, 0f);
         attenuation = Mathf.Max(attenuation, 0f);
+        blueShiftPower = Mathf.Max(blueShiftPower, 0f);
 
         maxEffectRadius = Mathf.Max(maxEffectRadius, 0f);
         effectFadeOutDist = Mathf.Max(effectFadeOutDist, 0f);
