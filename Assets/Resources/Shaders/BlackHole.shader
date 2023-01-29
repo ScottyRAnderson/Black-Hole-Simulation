@@ -161,6 +161,7 @@ Shader "Hidden/BlackHole"
                     // Incorperate the gas disc effect
                     finalCol += (1 - exp(-gasVolume));
 
+                    // Gravitational blue shifting
                     float3 gravitationalShift = computeGravitationalShift(rayOrigin, _Position, _GravitationalConst, singularityMass);
                     finalCol *= gravitationalShift;
 
