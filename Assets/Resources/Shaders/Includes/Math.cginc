@@ -11,7 +11,7 @@ float2 raySphere(float3 sphereCentre, float sphereRadius, float3 rayOrigin, floa
 	float3 offset = rayOrigin - sphereCentre;
 	float a = 1; // Set to dot(rayDir, rayDir) if rayDir might not be normalized
 	float b = 2 * dot(offset, rayDir);
-	float c = dot(offset, offset) - sphereRadius * sphereRadius;
+	float c = dot(offset, offset) - pow(sphereRadius, 2);
 	float d = b * b - 4 * a * c; // Discriminant from quadratic formula
 
 	// Number of intersections: 0 when d < 0; 1 when d = 0; 2 when d > 0

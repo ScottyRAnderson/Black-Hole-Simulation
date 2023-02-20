@@ -82,6 +82,17 @@ Shader "Hidden/BlackHole"
                 rayDir = normalize(acceleration); // We only want velocity so normalize the acceleration
             }
 
+            // Checks if a given position is within the event horizon
+            // Returns 0 if False, 1 if True
+            int withinEventHorizon(float3 position, float stepSize)
+            {
+                int mask = 0;
+                if (distance(position, _Position) < _SchwarzschildRadius + stepSize){
+                    mask = 1;
+                }
+                return mask;
+            }
+
             fixed4 frag(v2f i) : SV_Target
             {
                 // Determine the origin & direction of our ray to march through the scene
@@ -96,7 +107,7 @@ Shader "Hidden/BlackHole"
                 float2 boundsHitInfo = raySphere(_Position, _MaxEffectRadius, rayOrigin, rayDir);
                 float dstToBounds = boundsHitInfo.x;
                 float dstThroughBounds = boundsHitInfo.y;
-            
+
                 // If we are looking through the bounds render the black hole
                 if (dstThroughBounds > 0)
                 {            
@@ -104,7 +115,7 @@ Shader "Hidden/BlackHole"
                     rayOrigin += rayDir * dstToBounds;
                     float3 rayPos = rayOrigin;
                     float3 gasVolume = 0;
-                    float shadowMask = 0;
+                    int shadowMask = 0;
 
                     // March our ray through the scene
                     for (float s = 0; s < _StepCount; s++)
@@ -115,12 +126,11 @@ Shader "Hidden/BlackHole"
                         sampleGasVolume(gasVolume, rayPos, rayDir, _Position, _MaxEffectRadius, _StepSize);
 
                         // Ray should be terminated if it falls within the event horizon
-                        if (distance(rayPos, _Position) < _SchwarzschildRadius + _StepSize)
-                        {
-                            shadowMask = 1;
+                        shadowMask = withinEventHorizon(rayPos, _StepSize);
+                        if (shadowMask == 1){
                             break;
                         }
-                        
+
                         // ...Likewise if the ray leaves the simulation bounds
                         if (distance(rayPos, _Position) > _MaxEffectRadius) {
                             break;

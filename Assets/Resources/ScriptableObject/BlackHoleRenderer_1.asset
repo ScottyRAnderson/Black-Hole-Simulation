@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderEffect: 1
   effectShader: {fileID: 4800000, guid: 99f95e5d4a5319042bbf03bfb6ebb20c, type: 3}
-  settings: {fileID: 11400000, guid: 1134770dc4a739944b3c99d567db57bd, type: 2}
+  settings: {fileID: 11400000, guid: d03d1c821e0ace2448d578cbfd8a4394, type: 2}

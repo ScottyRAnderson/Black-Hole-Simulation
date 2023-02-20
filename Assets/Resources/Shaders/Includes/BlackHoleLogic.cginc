@@ -84,7 +84,7 @@ void sampleGasVolume(inout float3 color, float3 position, float3 rayDir, float3 
     // Full quality volumetrics
     if (_AccretionQuality == 0)
     {
-        float transmittance = gasDensity(position, densityFalloff, distFromDisc, distFromCenter);
+        float transmittance = gasDensity(position - volCenter, densityFalloff, distFromDisc, distFromCenter);
 
         // Calculate disc volume shape
         float radialGradient = 1 - saturate((distFromCenter - _AccretionInnerRadius) / _AccretionOuterRadius);
@@ -114,7 +114,7 @@ void sampleGasVolume(inout float3 color, float3 position, float3 rayDir, float3 
         if (discDst < stepSize)
         {
             // If we detect the disc, sample from the texture
-            float3 discSample = position + rayDir * discDst;
+            float3 discSample = (position - volCenter) + rayDir * discDst;
             finalCol = discColor(discSample, densityFalloff, volRadius, distFromDisc, distFromCenter);
         }
     }
