@@ -15,6 +15,7 @@ Raymarched Black Hole simulation implementing a pseudo photon simulation through
 ### Todo
 * Implement doppler beaming on the accretion disc.
 * Implement gravitational Red-shifting.
+* Overlay blue noise to reduce rendering artifacts.
 
 ## Development Video
 Below is a development video detailing the creation process of this effect,
