@@ -4,7 +4,7 @@ Raymarched Black Hole simulation implementing a pseudo photon simulation through
 ![BlackHoleFinal](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/BlackHoleFinal.png)
 
 ## Features
-* **Accretion Disc**
+* **Volumetric Accretion Disc**
 <br> The gravitationally lensed accretion disc is formed from a 3D noise texture sampled in radial coordinate space. This may be controlled through a system of persistent data objects.
 <br> Low quality accretion disc option implemented for better performance.
 * **Gravitational Blue-shifting**
