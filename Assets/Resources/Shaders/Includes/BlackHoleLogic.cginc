@@ -102,8 +102,9 @@ void sampleGasVolume(inout float3 color, float3 position, float3 rayDir, float3 
         // Base color
         float normalizedDist = remap01(volRadius, 0, distFromCenter);
         float falloff = pow(normalizedDist, _AccretionFalloff);
-
-        float3 baseColor = lerp(_AccretionMainColor, _AccretionInnerColor, falloff * _AccretionColorShift);
+        float colorFalloff = pow(normalizedDist, _AccretionColorShift);
+        
+        float3 baseColor = lerp(_AccretionMainColor, _AccretionInnerColor, colorFalloff);
         finalCol = lerp(baseColor, _AccretionIntensity, falloff) * transmittance * stepSize;
     }
     else if(color.r == 0)

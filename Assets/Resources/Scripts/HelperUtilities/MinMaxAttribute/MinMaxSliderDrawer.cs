@@ -23,7 +23,7 @@ public class MinMaxSliderDrawer : PropertyDrawer
             Rect[] SplitRect = EditorHelper.SplitRect(EditorGUI.PrefixLabel(position, label), 3);
 
             int Padding = (int)SplitRect[0].width - 40;
-            int Spacing = 5;
+            int Spacing = 1;
 
             SplitRect[0].width -= Padding + Spacing;
 
