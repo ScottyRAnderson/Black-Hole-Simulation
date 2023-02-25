@@ -5,6 +5,8 @@ static const float PI = 3.14159265359;
 
 // Returns dstToSphere, dstThroughSphere
 // Implementation reference: jeancolasp @ scratchapixel & Sebastian Lague
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html
+// https://www.youtube.com/watch?v=lctXaT9pxA0
 float2 raySphere(float3 sphereCentre, float sphereRadius, float3 rayOrigin, float3 rayDir)
 {
 	float3 offset = rayOrigin - sphereCentre;
