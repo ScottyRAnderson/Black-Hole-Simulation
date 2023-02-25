@@ -3,31 +3,29 @@ static const float speedOfLight = 299792458;
 static const float gravitationalConst = 0.000000000066743;
 static const float PI = 3.14159265359;
 
-// Returns vector (dstToSphere, dstThroughSphere)
-// If ray origin is inside sphere, dstToSphere = 0
-// If ray misses sphere, dstToSphere = maxValue; dstThroughSphere = 0
+// Returns dstToSphere, dstThroughSphere
+// Implementation reference: jeancolasp @ scratchapixel & Sebastian Lague
 float2 raySphere(float3 sphereCentre, float sphereRadius, float3 rayOrigin, float3 rayDir)
 {
 	float3 offset = rayOrigin - sphereCentre;
-	float a = 1; // Set to dot(rayDir, rayDir) if rayDir might not be normalized
-	float b = 2 * dot(offset, rayDir);
+	float b = dot(offset, rayDir) * 2;
 	float c = dot(offset, offset) - pow(sphereRadius, 2);
-	float d = b * b - 4 * a * c; // Discriminant from quadratic formula
+	float d = pow(b, 2) - 4 * c;
 
-	// Number of intersections: 0 when d < 0; 1 when d = 0; 2 when d > 0
+    // Intersected with sphere...
 	if (d > 0)
 	{
-		float s = sqrt(d);
-		float dstToSphereNear = max(0, (-b - s) / (2 * a));
-		float dstToSphereFar = (-b + s) / (2 * a);
+		d = sqrt(d);
+		float distToSphere = max(0, (-b - d) / 2);
+		float sphereFarDist = (d - b) / 2;
+        float dstThroughSphere = sphereFarDist - distToSphere;
 
-		// Ignore intersections that occur behind the ray
-		if (dstToSphereFar >= 0){
-			return float2(dstToSphereNear, dstToSphereFar - dstToSphereNear);
+		if (sphereFarDist >= 0){
+			return float2(distToSphere, dstThroughSphere);
 		}
 	}
 
-	// Ray did not intersect sphere
+	// No intersections...
 	return float2(maxFloat, 0);
 }
 
