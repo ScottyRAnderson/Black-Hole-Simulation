@@ -11,7 +11,7 @@ public class EffectRenderer : MonoBehaviour
     private static Material defaultMat;
 
     [ImageEffectOpaque]
-    private void OnRenderImage(RenderTexture intialSource, RenderTexture finalDestination)
+    private void OnRenderImage(RenderTexture initialSource, RenderTexture finalDestination)
     {
         if (defaultMat == null){
             defaultMat = new Material(Shader.Find("Unlit/Texture"));
