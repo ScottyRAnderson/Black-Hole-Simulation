@@ -23,12 +23,12 @@ public class EffectRenderer : MonoBehaviour
         // If no effects are given, blit the default mat
         if (effects == null || effects.Length == 0)
         {
-            Graphics.Blit(intialSource, finalDestination, defaultMat);
+            Graphics.Blit(initialSource, finalDestination, defaultMat);
             return;
         }
 
         List<RenderTexture> temporaryTextures = new List<RenderTexture>();
-        RenderTexture currentSource = intialSource;
+        RenderTexture currentSource = initialSource;
         RenderTexture currentDestination = null;
 
         for (int i = 0; i < effects.Length; i++)
