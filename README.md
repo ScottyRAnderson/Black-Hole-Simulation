@@ -22,7 +22,7 @@ Below is a development video detailing the creation process of this effect,
 <br>[Simulations - Black Holes](https://www.youtube.com/watch?v=yhDxBt72PU4)
 
 ![GaiaPanorama](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/GaiaPanorama.png)
-![BlackHoleCinematic](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/BlackHoleCinematic.png)
+![BlackHoleDramatic](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/BlackHoleFinal_Dramatic.png)
 
 ## Known Issues
 * **Radial Seams**
