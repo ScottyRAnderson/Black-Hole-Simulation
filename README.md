@@ -1,7 +1,7 @@
 # Black Hole Simulation
 Raymarched Black Hole simulation implementing a pseudo photon simulation through HLSL.
 <br> Rendered in real-time using Unity
-![BlackHoleFinal](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/BlackHoleFinal.png)
+![BlackHoleFinal](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/black-hole-sim_feature_1.jpg)
 
 ## Features
 * **Volumetric Accretion Disc**
@@ -21,8 +21,8 @@ Raymarched Black Hole simulation implementing a pseudo photon simulation through
 Below is a development video detailing the creation process of this effect,
 <br>[Simulations - Black Holes](https://www.youtube.com/watch?v=yhDxBt72PU4)
 
-![GaiaPanorama](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/GaiaPanorama.png)
-![BlackHoleDramatic](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/BlackHoleFinal_Dramatic.png)
+![GaiaPanorama](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/black-hole-sim_feature_3.jpg)
+![BlackHoleDramatic](https://raw.githubusercontent.com/ScottyRAnderson/Images/master/black-hole-sim_feature_2.jpg)
 
 ## Known Issues
 * **Radial Seams**
